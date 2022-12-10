@@ -9,6 +9,18 @@ import os
 announced = False
 buffer = 5 * 60 # 5 minutes
 
+class games:
+    def __init__(self, name, hashtags):
+        self.name = name
+        self.hashtags = hashtags
+
+gameList = [
+    games("World of Warcraft", ["#WorldofWarcraft", "#WoW"]),
+    games("League of Legends", ["#LeagueofLegends", "#LoL"]),
+    games("Software and Game Development", ["#SoftwareDevelopment", "Dev"]),
+    games("New World", "#NewWorld")
+]
+
 username = "DanFrmSpace"
 
 request_token_url = f"https://id.twitch.tv/oauth2/token?client_id={keys.twitch_api_key}&client_secret={keys.twitch_api_secret}&grant_type=client_credentials"
@@ -45,7 +57,10 @@ def getThumbnail(url):
     local_file = os.path.join(folder_path, file_name)
     urllib.request.urlretrieve(url, local_file)
 
-
+def getHashtags(game):
+    for game in gameList:
+        if game.name == game:
+            return game.hashtags
 
 if __name__ == '__main__':
     api = api()
@@ -73,9 +88,11 @@ if __name__ == '__main__':
                 stream_thumbnail = broadcaster["thumbnail_url"].format(width=1920, height=1080)
 
                 getThumbnail(stream_thumbnail)
+                hashtags = getHashtags(broadcaster_game)
+                hashtags = " ".join(hashtags)
 
                 if not announced:
-                    tweet(api, f"This is a test for my twitch live notifier\nI am currently live streaming {broadcaster_game} on twitch!\nhttps://twitch.tv/{username}", "./thumbnail/thumbnail.jpg")
+                    tweet(api, f"This is a test for my twitch live notifier\nI am currently live streaming {broadcaster_game} on twitch!\nhttps://twitch.tv/{username}\n{hashtags}", "./thumbnail/thumbnail.jpg")
                     print("Tweeted that I'm live on twitch!")
                     announced = True
                     time.sleep(buffer)
