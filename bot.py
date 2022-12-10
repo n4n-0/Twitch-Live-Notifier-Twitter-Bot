@@ -9,6 +9,8 @@ import os
 announced = False
 buffer = 5 * 60 # 5 minutes
 
+username = "DanFrmSpace"
+
 request_token_url = f"https://id.twitch.tv/oauth2/token?client_id={keys.twitch_api_key}&client_secret={keys.twitch_api_secret}&grant_type=client_credentials"
 reponse = requests.post(request_token_url)
 print(reponse)
@@ -58,7 +60,7 @@ if __name__ == '__main__':
     while True:
         os.system(cls)
         print("Checking if I'm live on twitch...")
-        response = requests.get('https://api.twitch.tv/helix/streams?user_login=DanFrmSpace', headers=header)
+        response = requests.get(f'https://api.twitch.tv/helix/streams?user_login={username}', headers=header)
         if response.status_code == 200:
             data = response.json()["data"]
             if data:
@@ -73,7 +75,7 @@ if __name__ == '__main__':
                 getThumbnail(stream_thumbnail)
 
                 if not announced:
-                    tweet(api, f"This is a test for my twitch live notifier\nI am currently live streaming {broadcaster_game} on twitch!\nhttps://twitch.tv/DanFrmSpace", "./thumbnail/thumbnail.jpg")
+                    tweet(api, f"This is a test for my twitch live notifier\nI am currently live streaming {broadcaster_game} on twitch!\nhttps://twitch.tv/{username}", "./thumbnail/thumbnail.jpg")
                     print("Tweeted that I'm live on twitch!")
                     announced = True
                     time.sleep(buffer)
@@ -81,7 +83,7 @@ if __name__ == '__main__':
                     time.sleep(buffer)
             else:
                 if announced:
-                    tweet(api, "Thanks to everyone who watched my stream!\nI'm no longer live on twitch!\nFollow me at https://twitch.tv/DanFrmSpace so you don't miss the next one <3")
+                    tweet(api, f"Thanks to everyone who watched my stream!\nI'm no longer live on twitch!\nFollow me at https://twitch.tv/{username} so you don't miss the next one <3")
                     print("Tweeted that I'm no longer live on twitch!")
                     announced = False
                     time.sleep(buffer)
