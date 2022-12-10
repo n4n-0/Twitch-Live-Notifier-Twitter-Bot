@@ -1,5 +1,3 @@
-# Create a twitter bot that tweets when I got live on twitch
-
 import tweepy
 import keys
 import time
@@ -9,6 +7,7 @@ import urllib.request
 import os
 
 announced = False
+buffer = 5 * 60 # 5 minutes
 
 request_token_url = f"https://id.twitch.tv/oauth2/token?client_id={keys.twitch_api_key}&client_secret={keys.twitch_api_secret}&grant_type=client_credentials"
 reponse = requests.post(request_token_url)
@@ -77,12 +76,19 @@ if __name__ == '__main__':
                     tweet(api, f"This is a test for my twitch live notifier\nI am currently live streaming {broadcaster_game} on twitch!\nhttps://twitch.tv/DanFrmSpace", "./thumbnail/thumbnail.jpg")
                     print("Tweeted that I'm live on twitch!")
                     announced = True
-                    time.sleep(1 * 60)
+                    time.sleep(buffer)
                 else:
-                    time.sleep(1 * 60)
+                    time.sleep(buffer)
             else:
-                announced = False
-                time.sleep(1 * 60)
+                if announced:
+                    tweet(api, "Thanks to everyone who watched my stream!\nI'm no longer live on twitch!\nFollow me at https://twitch.tv/DanFrmSpace so you don't miss the next one <3")
+                    print("Tweeted that I'm no longer live on twitch!")
+                    announced = False
+                    time.sleep(buffer)
+                else:
+                    print("I'm not live on twitch right now")
+                    announced = False
+                    time.sleep(buffer)
         else:
             print('Error: ' + str(response.status_code) + ' ' + response.text)
             
