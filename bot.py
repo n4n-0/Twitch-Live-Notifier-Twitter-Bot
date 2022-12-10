@@ -4,8 +4,19 @@ import tweepy
 import keys
 import time
 import requests
+import platform
+import urllib.request
+import os
 
 announced = False
+
+request_token_url = f"https://id.twitch.tv/oauth2/token?client_id={keys.twitch_api_key}&client_secret={keys.twitch_api_secret}&grant_type=client_credentials"
+reponse = requests.post(request_token_url)
+print(reponse)
+token = reponse.json()['access_token']
+header = {'Client-ID': keys.twitch_api_key, "Authorization": f'Bearer {token}'}
+
+cls = "cls" if platform.system() == "Windows" else "clear"
 
 def api():
     auth = tweepy.OAuthHandler(keys.api_key, keys.api_secret)
@@ -17,17 +28,23 @@ def tweet(api: tweepy.API, message: str, image_path=None):
     if image_path is None:
         api.update_status(message)
     else:
-        api.update_with_media(image_path, message)
+        api.update_status_with_media(message, image_path)
 
-# Create a function that requests decapi.me/twitch/uptime
-def isOnline():
-    # If the uptime is 0, return False
-    # If the uptime is not 0, return True
-    request = requests.get('https://decapi.me/twitch/uptime?channel=DanFrmSpace')
-    if request.text == 'DanFrmSpace is offline':
-        return False
-    else:
-        return True
+def getThumbnail(url):
+    folder_path = "./thumbnail/"
+    if not os.path.exists(folder_path):
+        os.mkdir(folder_path)
+    file_name = 'thumbnail.jpg'
+
+    #if thumbnail already exists, delete it
+    if os.path.exists(os.path.join(folder_path, file_name)):
+        os.remove(os.path.join(folder_path, file_name))
+
+
+    local_file = os.path.join(folder_path, file_name)
+    urllib.request.urlretrieve(url, local_file)
+
+
 
 if __name__ == '__main__':
     api = api()
@@ -40,14 +57,33 @@ if __name__ == '__main__':
 
     # Make a loop that checks if I'm live on twitch every 5 minutes
     while True:
-        
-        if isOnline() and not announced:
-            tweet(api, "I am currently live streaming on twitch!\nhttps://twitch.tv/DanFrmSpace")
-            print("I'm live on twitch")
-            announced = True
-        elif not isOnline():
-            announced = False
-            print("I'm not live on twitch")
+        os.system(cls)
+        print("Checking if I'm live on twitch...")
+        response = requests.get('https://api.twitch.tv/helix/streams?user_login=DanFrmSpace', headers=header)
+        if response.status_code == 200:
+            data = response.json()["data"]
+            if data:
+                broadcaster = data[0]
+                broadcaster_id = broadcaster["id"]
+                broadcaster_name = broadcaster["user_name"]
+                broadcaster_game = broadcaster["game_name"]
+                stream_title = broadcaster["title"]
+                stream_viewer_count = broadcaster["viewer_count"]
+                stream_thumbnail = broadcaster["thumbnail_url"].format(width=1920, height=1080)
 
-        time.sleep(5 * 60)
+                getThumbnail(stream_thumbnail)
+
+                if not announced:
+                    tweet(api, f"This is a test for my twitch live notifier\nI am currently live streaming {broadcaster_game} on twitch!\nhttps://twitch.tv/DanFrmSpace", "./thumbnail/thumbnail.jpg")
+                    print("Tweeted that I'm live on twitch!")
+                    announced = True
+                    time.sleep(1 * 60)
+                else:
+                    time.sleep(1 * 60)
+            else:
+                announced = False
+                time.sleep(1 * 60)
+        else:
+            print('Error: ' + str(response.status_code) + ' ' + response.text)
+            
 
